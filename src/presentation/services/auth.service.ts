@@ -80,4 +80,22 @@ export class AuthService {
       throw CustomErrors.internalServerError('Error sending email');
     return true;
   }
+
+  public async validateEmail(token: string) {
+    const payload = JwtAdapter.validateToken(token);
+
+    if (!payload) throw CustomErrors.unauthorized('Invalid token');
+
+    const { email } = payload as { email: string };
+
+    if (!email) throw CustomErrors.badRequest('Invalid token');
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) throw CustomErrors.notFound('User not found');
+
+    user.emailValidated = true;
+    await user.save();
+    return true;
+  }
 }
